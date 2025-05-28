@@ -1,29 +1,24 @@
-mod models;
+use actix_web::{App, HttpServer, web};
+use db::connect;
+
+mod db;
 mod handlers;
 mod routes;
-mod db;
-
-use actix_web::{App, HttpServer};
-use db::connect;
-use routes::config;
-use actix_web::web;
-use log::info;
+mod models;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+    dotenv::dotenv().ok();
+
     let pool = connect().await;
 
-    info!("Connected to database");
-
-    let port = std::env::var("PORT").unwrap_or("8081".to_string());
-
-    println!("Starting user-service at http://localhost:{}", port);
+    let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+    println!("Server running on http://localhost:{}", port);
 
     HttpServer::new(move || {
         App::new()
-            .app_data(web::Data::new(pool.clone()))
-            .configure(config)
+            .app_data(web::Data::new(pool.clone()))   
+            .configure(routes::config)
     })
     .bind(("127.0.0.1", port.parse().unwrap()))?
     .run()
