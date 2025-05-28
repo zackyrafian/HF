@@ -1,5 +1,7 @@
-use actix_web::{App, HttpServer, web};
-use db::connect;
+use actix_web::{web, App, HttpServer};
+use actix_cors::Cors;
+use dotenvy::dotenv;
+use std::env;
 
 mod db;
 mod handlers;
@@ -8,19 +10,29 @@ mod models;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    dotenv::dotenv().ok();
+    dotenv().ok();
 
-    let pool = connect().await;
+    let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+    let addr = format!("127.0.0.1:{}", port);
 
-    let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
-    println!("Server running on http://localhost:{}", port);
+    let pool = db::connect().await;
 
-    HttpServer::new(move || {
+    println!("Server running at http://{}", addr);
+
+    HttpServer::new(move || { 
+        let cors = Cors::default()
+            .allow_any_origin() 
+            .allow_any_method()
+            .allow_any_header()
+            .max_age(3600);
+        
         App::new()
-            .app_data(web::Data::new(pool.clone()))   
+            .wrap(cors)
+            .app_data(web::Data::new(pool.clone()))
             .configure(routes::config)
     })
-    .bind(("127.0.0.1", port.parse().unwrap()))?
+
+    .bind(addr)?
     .run()
     .await
 }
