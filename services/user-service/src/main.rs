@@ -9,7 +9,6 @@ mod routes;
 mod models;
 mod utils;
 
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
@@ -21,19 +20,23 @@ async fn main() -> std::io::Result<()> {
 
     println!("Server running at http://{}", addr);
 
-    HttpServer::new(move || { 
+    HttpServer::new(move || {
         let cors = Cors::default()
-            .allow_any_origin() 
-            .allow_any_method()
-            .allow_any_header()
+            .allowed_origin("http://localhost:5173")
+            .allowed_methods(vec!["GET", "POST", "OPTIONS"])
+            .allowed_headers(vec![
+                actix_web::http::header::AUTHORIZATION,
+                actix_web::http::header::CONTENT_TYPE,
+            ])
+            .supports_credentials()
             .max_age(3600);
-        
+
+
         App::new()
             .wrap(cors)
             .app_data(web::Data::new(pool.clone()))
             .configure(routes::config)
     })
-
     .bind(addr)?
     .run()
     .await
