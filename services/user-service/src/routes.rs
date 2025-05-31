@@ -1,13 +1,10 @@
 use actix_web::web;
-use crate::handlers::register_user;
-use crate::handlers::get_users;
+use crate::handlers::{register_user, login_user, logout_user, get_users};
 
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(register_user);
     cfg.service(get_users);
-    //     web::scope("/users")
-    //         .route("", web::get().to(handlers::get_users))
-    //         .route("/register", web::post().to(handlers::register_user))
-    // );
+    cfg.service(login_user);
+    cfg.service(logout_user);
 }
