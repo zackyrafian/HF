@@ -1,7 +1,7 @@
 import type { RouteObject } from "react-router-dom";
 import { HomePage, LoginPage, TestingPage } from "../features";
 import HomeLayout from "../features/home/layout";
-import AuthLayout from "../features/(auth)/layout";
+// import AuthLayout from "../features/(auth)/layout";
 
 export const routes: RouteObject[] = [
   {
@@ -12,7 +12,7 @@ export const routes: RouteObject[] = [
     ],
   },
   {
-    element: <AuthLayout />,
+    // element: <AuthLayout />,
     children: [{ path: "/login", element: <LoginPage /> }],
   },
 ];
