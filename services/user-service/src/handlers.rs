@@ -1,4 +1,4 @@
-use actix_web::{post, get, web, HttpResponse, Responder, cookie::Cookie};
+use actix_web::{post, get, web, HttpResponse, HttpRequest, Responder, cookie::Cookie};
 use sqlx::PgPool;
 use bcrypt::{hash, verify, DEFAULT_COST};
 use serde::Serialize;
@@ -100,6 +100,39 @@ pub async fn logout_user() -> impl Responder {
 
     HttpResponse::Ok().cookie(cookie).body("Logged out")
 }
+
+
+#[get("/me")]
+pub async fn get_me(req: HttpRequest, db_pool: web::Data<PgPool>) -> impl Responder {
+    let token = req.cookie("auth_token")
+        .map(|c| c.value().to_string());
+
+    let token = match token {
+        Some(t) => t,
+        None => return HttpResponse::Unauthorized().body("No auth token"),
+    };
+
+    let claims = match verify_jwt(&token) { 
+        Ok(claims) => claims, 
+        Err(_) => return HttpResponse::Unauthorized().body("Invalid token"),
+    };
+
+    let email = claims.sub;
+
+    let user = sqlx::query_as!(
+        User,
+        "SELECT id, username, email FROM users WHERE email = $1",
+        &email
+    )
+    .fetch_optional(db_pool.get_ref())
+    .await;
+
+    match user {
+        Ok(Some(user)) => HttpResponse::Ok().json(user),
+        _ => HttpResponse::NotFound().body("User not found"),
+    }
+}
+
 
 #[get("/users")]
 pub async fn get_users(db_pool: web::Data<PgPool>) -> impl Responder {
