@@ -1,10 +1,9 @@
 import axios from "axios";
-
-const API_URL = "http://localhost:8081";
+import { API_URL } from "../../lib/axios";
 
 export const loginRequest = (email: string, password: string) => {
   return axios.post(
-    `${API_URL}/login`,
+    `${API_URL}/user/login`,
     { email, password },
     {
       withCredentials: true,
@@ -13,7 +12,7 @@ export const loginRequest = (email: string, password: string) => {
 };
 
 export const fetchMe = () => {
-  return axios.get(`${API_URL}/users`, {
+  return axios.get(`${API_URL}/user/me`, {
     withCredentials: true,
   });
 };
